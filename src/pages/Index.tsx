@@ -41,7 +41,7 @@ const Index: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.8 }}
             >
-              COSMIC PORTAL
+              PORTALS
             </motion.h1>
             
             {/* Portal container with fixed dimensions to prevent layout shifting */}
