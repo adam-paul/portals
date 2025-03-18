@@ -40,10 +40,10 @@ const Games: React.FC = () => {
   
   return (
     <div className="space-container">
-      <Navbar gameMode={gameMode} toggleGameMode={toggleGameMode} />
+      {!gameMode && <Navbar gameMode={gameMode} toggleGameMode={toggleGameMode} />}
       
       {gameMode ? (
-        <GameMode />
+        <GameMode onExit={toggleGameMode} />
       ) : (
         <>
           <StarField />

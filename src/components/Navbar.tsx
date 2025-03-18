@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Rocket, Moon, Sun } from 'lucide-react';
+import { Rocket, ListIcon, Gamepad2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 
 interface NavbarProps {
@@ -32,15 +32,12 @@ const Navbar: React.FC<NavbarProps> = ({ gameMode = false, toggleGameMode }) => 
         
         {toggleGameMode && (
           <div className="flex items-center space-x-2">
-            <Moon size={16} className={`${gameMode ? 'opacity-50' : 'opacity-100'}`} />
+            <ListIcon size={18} className={`${gameMode ? 'opacity-50' : 'opacity-100'}`} />
             <Switch
               checked={gameMode}
               onCheckedChange={toggleGameMode}
             />
-            <Sun size={16} className={`${gameMode ? 'opacity-100' : 'opacity-50'}`} />
-            <span className="text-xs text-space-light ml-1 hidden md:inline">
-              {gameMode ? 'GAME MODE' : 'WEBSITE MODE'}
-            </span>
+            <Gamepad2 size={18} className={`${gameMode ? 'opacity-100' : 'opacity-50'}`} />
           </div>
         )}
       </div>
