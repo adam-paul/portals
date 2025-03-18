@@ -1,14 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import StarField from '@/components/StarField';
 import PortalAnimation from '@/components/PortalAnimation';
 import Navbar from '@/components/Navbar';
-import GameMode from '@/components/GameMode';
 
 const Index: React.FC = () => {
-  const [gameMode, setGameMode] = useState(false);
+  const navigate = useNavigate();
   const [isLoaded, setIsLoaded] = useState(false);
   
   // Set loaded state after a short delay to ensure animations are ready
@@ -20,18 +19,15 @@ const Index: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
   
-  const toggleGameMode = () => {
-    setGameMode(!gameMode);
+  const handlePortalClick = () => {
+    navigate('/games?gameMode=true');
   };
   
   return (
     <div className="space-container">
-      <Navbar gameMode={gameMode} toggleGameMode={toggleGameMode} />
+      <Navbar />
       
-      {gameMode ? (
-        <GameMode />
-      ) : (
-        <>
+      <>
           <StarField />
           
           <div className="relative min-h-screen flex flex-col items-center justify-center px-4">
@@ -50,7 +46,8 @@ const Index: React.FC = () => {
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.5, duration: 1 }}
-                className="absolute inset-0"
+                className="absolute inset-0 cursor-pointer"
+                onClick={handlePortalClick}
               >
                 <PortalAnimation onLoad={() => setIsLoaded(true)} />
               </motion.div>
@@ -83,13 +80,12 @@ const Index: React.FC = () => {
                   transition={{ delay: 0.3, duration: 1 }}
                 >
                   Journey through the cosmos to discover a universe of gaming experiences.
-                  Toggle GAME MODE in the top right to play directly.
+                  Click the portal to enter the game universe directly.
                 </motion.p>
               )}
             </AnimatePresence>
           </div>
         </>
-      )}
     </div>
   );
 };

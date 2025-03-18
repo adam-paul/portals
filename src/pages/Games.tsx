@@ -1,13 +1,23 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
 import StarField from '@/components/StarField';
 import Navbar from '@/components/Navbar';
 import GameGrid from '@/components/GameGrid';
 import GameMode from '@/components/GameMode';
 
 const Games: React.FC = () => {
+  const location = useLocation();
   const [gameMode, setGameMode] = useState(false);
+  
+  useEffect(() => {
+    // Check if URL has gameMode=true query parameter
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get('gameMode') === 'true') {
+      setGameMode(true);
+    }
+  }, [location]);
   
   const toggleGameMode = () => {
     setGameMode(!gameMode);

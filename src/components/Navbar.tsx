@@ -5,11 +5,11 @@ import { Rocket, Moon, Sun } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 
 interface NavbarProps {
-  gameMode: boolean;
-  toggleGameMode: () => void;
+  gameMode?: boolean;
+  toggleGameMode?: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ gameMode, toggleGameMode }) => {
+const Navbar: React.FC<NavbarProps> = ({ gameMode = false, toggleGameMode }) => {
   const location = useLocation();
   const isHomePage = location.pathname === '/';
   
@@ -30,17 +30,19 @@ const Navbar: React.FC<NavbarProps> = ({ gameMode, toggleGameMode }) => {
           </Link>
         )}
         
-        <div className="flex items-center space-x-2">
-          <Moon size={16} className={`${gameMode ? 'opacity-50' : 'opacity-100'}`} />
-          <Switch
-            checked={gameMode}
-            onCheckedChange={toggleGameMode}
-          />
-          <Sun size={16} className={`${gameMode ? 'opacity-100' : 'opacity-50'}`} />
-          <span className="text-xs text-space-light ml-1 hidden md:inline">
-            {gameMode ? 'GAME MODE' : 'WEBSITE MODE'}
-          </span>
-        </div>
+        {toggleGameMode && (
+          <div className="flex items-center space-x-2">
+            <Moon size={16} className={`${gameMode ? 'opacity-50' : 'opacity-100'}`} />
+            <Switch
+              checked={gameMode}
+              onCheckedChange={toggleGameMode}
+            />
+            <Sun size={16} className={`${gameMode ? 'opacity-100' : 'opacity-50'}`} />
+            <span className="text-xs text-space-light ml-1 hidden md:inline">
+              {gameMode ? 'GAME MODE' : 'WEBSITE MODE'}
+            </span>
+          </div>
+        )}
       </div>
     </nav>
   );

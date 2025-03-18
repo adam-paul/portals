@@ -18,7 +18,7 @@ const GameMode: React.FC = () => {
     let score = 0;
     let playerX = 0;
     let playerY = 0;
-    let isGameActive = true;
+    const isGameActive = true;
     
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
