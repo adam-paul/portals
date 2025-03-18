@@ -1,7 +1,11 @@
 
 import React, { useEffect, useRef } from 'react';
 
-const PortalAnimation: React.FC = () => {
+interface PortalAnimationProps {
+  onLoad?: () => void;
+}
+
+const PortalAnimation: React.FC<PortalAnimationProps> = ({ onLoad }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   useEffect(() => {
@@ -98,11 +102,16 @@ const PortalAnimation: React.FC = () => {
     resizeCanvas();
     animationFrameId = requestAnimationFrame(animate);
     
+    // Call onLoad callback after a short delay to ensure animation is visible
+    if (onLoad) {
+      setTimeout(onLoad, 500);
+    }
+    
     return () => {
       window.removeEventListener('resize', resizeCanvas);
       cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [onLoad]);
   
   return (
     <div className="portal-container">
