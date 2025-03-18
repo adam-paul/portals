@@ -67,7 +67,7 @@ const Games: React.FC = () => {
               animate={{ opacity: 1 }}
               transition={{ delay: 1, duration: 1 }}
             >
-              More games coming soon to the Portals...
+              More games coming soon to Portals...
             </motion.div>
           </div>
         </>
