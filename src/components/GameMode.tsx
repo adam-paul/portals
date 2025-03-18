@@ -48,7 +48,8 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
       acceleration: 0.01,
       drag: 0.99,
       rotationSpeed: 0.03,  // Speed of rotation
-      moveSpeed: 0.05       // Speed for direct WASD movement
+      moveSpeed: 0.05,      // Speed for direct WASD movement
+      collisionRadius: 1.5   // Collision detection radius for the ship
     };
     
     const shipControls = {
@@ -229,6 +230,11 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
       
       const sun = new THREE.Mesh(sunGeometry, sunMaterial);
       sun.position.set(200, 50, -300); // Closer so it's approachable
+      sun.userData = { 
+        type: 'portal',
+        collisionRadius: 20, // Use the full radius of the sun for collision
+        url: 'https://monsterhunter.io/'
+      };
       scene.add(sun);
       
       // Add a glow effect
@@ -769,6 +775,23 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
       // Update position
       shipPhysics.position.add(shipPhysics.velocity);
       spaceship.position.copy(shipPhysics.position);
+      
+      // Check for collisions with portal objects
+      checkPortalCollisions();
+    };
+    
+    // Function to check for collisions with portal objects
+    const checkPortalCollisions = () => {
+      // Check collision with sun portal
+      if (sun && sun.userData && sun.userData.type === 'portal') {
+        const distance = shipPhysics.position.distanceTo(sun.position);
+        
+        // If ship is inside or touching the sun's radius
+        if (distance <= (sun.userData.collisionRadius + shipPhysics.collisionRadius)) {
+          // Navigate to the linked URL
+          window.location.href = sun.userData.url;
+        }
+      }
     };
     
     // Update camera position to follow the spaceship
