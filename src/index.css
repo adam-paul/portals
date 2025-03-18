@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -96,6 +97,42 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-space-dark text-space-light font-mono;
+    margin: 0;
+    overflow-x: hidden;
+  }
+  
+  button {
+    @apply font-mono;
+  }
+}
+
+@layer components {
+  .space-container {
+    @apply bg-space-dark min-h-screen relative overflow-hidden;
+  }
+  
+  .enter-button {
+    @apply px-8 py-4 text-lg font-bold tracking-widest border-2 border-space-light 
+    bg-transparent text-space-light transition-all duration-300 relative z-10
+    hover:bg-space-light hover:text-space-dark focus:outline-none focus:ring-2 
+    focus:ring-space-light focus:ring-offset-2 focus:ring-offset-space-dark
+    active:scale-95;
+  }
+  
+  .portal-container {
+    @apply absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
+    w-60 h-60 md:w-80 md:h-80 flex items-center justify-center z-0
+    rounded-full border border-white/10 shadow-[0_0_20px_rgba(255,255,255,0.1)];
+  }
+  
+  .game-card {
+    @apply relative p-4 rounded-lg border border-white/20 transition-all duration-300
+    bg-space-gray/50 hover:border-white/50 hover:bg-space-gray flex flex-col items-center
+    justify-center text-center h-full;
+  }
+  
+  .toggle-switch {
+    @apply relative inline-flex items-center cursor-pointer;
   }
 }
