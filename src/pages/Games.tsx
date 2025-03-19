@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
@@ -10,17 +9,37 @@ import GameMode from '@/components/GameMode';
 const Games: React.FC = () => {
   const location = useLocation();
   const [gameMode, setGameMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [directGameMode, setDirectGameMode] = useState(false);
   
   useEffect(() => {
     // Check if URL has gameMode=true query parameter
     const searchParams = new URLSearchParams(location.search);
     if (searchParams.get('gameMode') === 'true') {
-      setGameMode(true);
+      setDirectGameMode(true);
+      setIsLoading(true);
+      
+      // Add a small delay to allow loading screen to render before showing game mode
+      const timer = setTimeout(() => {
+        setGameMode(true);
+        setIsLoading(false);
+      }, 1500);
+      
+      return () => clearTimeout(timer);
     }
   }, [location]);
   
   const toggleGameMode = () => {
-    setGameMode(!gameMode);
+    if (gameMode) {
+      setGameMode(false);
+    } else {
+      setIsLoading(true);
+      // Brief loading before showing game mode
+      setTimeout(() => {
+        setGameMode(true);
+        setIsLoading(false);
+      }, 1000);
+    }
   };
   
   const containerVariants = {
@@ -38,11 +57,34 @@ const Games: React.FC = () => {
     visible: { opacity: 1, y: 0 }
   };
   
+  // Loading screen component
+  const LoadingScreen = () => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black">
+      <div className="text-center">
+        <div className="mb-6">
+          <div className="inline-block w-16 h-16 border-4 border-t-white/80 border-r-white/30 border-b-white/10 border-l-white/60 rounded-full animate-spin"></div>
+        </div>
+        <h2 className="text-2xl font-bold tracking-wider text-white/90">Loading Game World...</h2>
+      </div>
+    </div>
+  );
+  
+  // Don't render normal content (not even Navbar) when direct game mode is used
+  if (directGameMode && (isLoading || gameMode)) {
+    return (
+      <div className="space-container">
+        {isLoading ? <LoadingScreen /> : <GameMode onExit={toggleGameMode} />}
+      </div>
+    );
+  }
+  
   return (
     <div className="space-container">
       {!gameMode && <Navbar gameMode={gameMode} toggleGameMode={toggleGameMode} />}
       
-      {gameMode ? (
+      {isLoading ? (
+        <LoadingScreen />
+      ) : gameMode ? (
         <GameMode onExit={toggleGameMode} />
       ) : (
         <>
@@ -55,10 +97,10 @@ const Games: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <h1 className="text-3xl md:text-4xl font-bold mb-4 tracking-wider">COSMIC GAMES</h1>
+              <h1 className="text-3xl md:text-4xl font-bold mb-4 tracking-wider">PORTALS</h1>
               <p className="text-white/70 max-w-2xl mx-auto">
-                Explore our collection of space-themed games. Each game offers a unique 
-                adventure into the mysteries of the cosmos.
+                Explore a collection of games from across the metaverse. Each game offers a unique 
+                adventure into the mind of its creator.
               </p>
             </motion.div>
             

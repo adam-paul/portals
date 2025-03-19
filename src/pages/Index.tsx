@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,6 +8,7 @@ import Navbar from '@/components/Navbar';
 const Index: React.FC = () => {
   const navigate = useNavigate();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isCollapsing, setIsCollapsing] = useState(false);
   
   // Set loaded state after a short delay to ensure animations are ready
   useEffect(() => {
@@ -20,7 +20,12 @@ const Index: React.FC = () => {
   }, []);
   
   const handlePortalClick = () => {
-    navigate('/games?gameMode=true');
+    setIsCollapsing(true);
+    
+    // Navigate after collapse animation completes (1 second)
+    setTimeout(() => {
+      navigate('/games?gameMode=true');
+    }, 1000);
   };
   
   return (
@@ -44,8 +49,15 @@ const Index: React.FC = () => {
             <div className="w-60 h-60 md:w-80 md:h-80 relative flex items-center justify-center">
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.5, duration: 1 }}
+                animate={{ 
+                  opacity: isCollapsing ? 0 : 1, 
+                  scale: isCollapsing ? 0 : 1,
+                  y: isCollapsing ? 300 : 0
+                }}
+                transition={{ 
+                  duration: isCollapsing ? 1 : 1,
+                  ease: isCollapsing ? "easeIn" : "easeOut"
+                }}
                 className="absolute inset-0 cursor-pointer"
                 onClick={handlePortalClick}
               >
@@ -55,11 +67,12 @@ const Index: React.FC = () => {
             
             {/* Enter button that only appears after portal is loaded */}
             <AnimatePresence>
-              {isLoaded && (
+              {isLoaded && !isCollapsing && (
                 <motion.div
                   className="mt-16 relative z-10"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   transition={{ duration: 0.8 }}
                 >
                   <Link to="/games">
@@ -72,11 +85,12 @@ const Index: React.FC = () => {
             </AnimatePresence>
             
             <AnimatePresence>
-              {isLoaded && (
+              {isLoaded && !isCollapsing && (
                 <motion.p
                   className="mt-12 text-white/50 max-w-md text-center text-sm"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   transition={{ delay: 0.3, duration: 1 }}
                 >
                   Journey through the cosmos to discover a universe of gaming experiences.
