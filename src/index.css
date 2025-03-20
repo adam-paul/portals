@@ -133,4 +133,8 @@
   .toggle-switch {
     @apply relative inline-flex items-center cursor-pointer;
   }
+  
+  .world-visualizer-container {
+    @apply w-full h-full relative;
+  }
 }
