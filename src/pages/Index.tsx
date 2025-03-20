@@ -93,8 +93,8 @@ const Index: React.FC = () => {
                   exit={{ opacity: 0 }}
                   transition={{ delay: 0.3, duration: 1 }}
                 >
-                  Journey through the cosmos to discover a universe of gaming experiences.
-                  Click the portal to enter the game universe directly.
+                  Explore the game universe that you yourself have created. Go anywhere. Discover anything.
+                  Click the portal to enter the Vibe-Cosmos directly.
                 </motion.p>
               )}
             </AnimatePresence>
