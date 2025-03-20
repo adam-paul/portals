@@ -589,6 +589,8 @@ const WorldVisualizer: React.FC<WorldVisualizerProps> = ({
     helpButton.innerHTML = '?';
     helpButton.title = 'Show Controls';
     helpButton.style.zIndex = '10';
+    // Important: Set type="button" to prevent form submission
+    helpButton.setAttribute('type', 'button');
     mountRef.current.appendChild(helpButton);
     
     // Create help panel (initially hidden)
@@ -598,7 +600,7 @@ const WorldVisualizer: React.FC<WorldVisualizerProps> = ({
     helpPanel.innerHTML = `
       <div class="flex justify-between items-center mb-2">
         <div class="font-bold">3D Controls</div>
-        <button class="text-white/70 hover:text-white">✕</button>
+        <button type="button" class="text-white/70 hover:text-white">✕</button>
       </div>
       <div>• Drag - Rotate the view</div>
       <div>• Scroll - Zoom in/out</div>
@@ -611,7 +613,11 @@ const WorldVisualizer: React.FC<WorldVisualizerProps> = ({
     
     // Add toggle functionality
     let helpVisible = false;
-    const toggleHelp = () => {
+    const toggleHelp = (e: Event) => {
+      // Prevent default button behavior to avoid form submission
+      e.preventDefault();
+      e.stopPropagation();
+      
       helpVisible = !helpVisible;
       
       if (helpVisible) {
@@ -629,8 +635,9 @@ const WorldVisualizer: React.FC<WorldVisualizerProps> = ({
     const closeButton = helpPanel.querySelector('button');
     if (closeButton) {
       closeButton.addEventListener('click', (e) => {
+        e.preventDefault();
         e.stopPropagation();
-        toggleHelp();
+        toggleHelp(e);
       });
     }
 
@@ -675,31 +682,55 @@ const WorldVisualizer: React.FC<WorldVisualizerProps> = ({
     observer.observe(mountRef.current);
 
     return () => {
-      // Remove event listeners
-      renderer.domElement.removeEventListener('click', handleSceneClick);
-      renderer.domElement.removeEventListener('mousemove', handleMouseMove);
-      
-      // Remove UI elements
-      if (helpButton && mountRef.current.contains(helpButton)) {
-        mountRef.current.removeChild(helpButton);
+      // Safety check for domElement before removing listeners
+      if (renderer && renderer.domElement) {
+        renderer.domElement.removeEventListener('click', handleSceneClick);
+        renderer.domElement.removeEventListener('mousemove', handleMouseMove);
       }
       
-      if (helpPanel && mountRef.current.contains(helpPanel)) {
-        mountRef.current.removeChild(helpPanel);
+      // Check if mountRef is still valid
+      if (mountRef.current) {
+        // Remove UI elements safely
+        if (helpButton && mountRef.current.contains(helpButton)) {
+          mountRef.current.removeChild(helpButton);
+        }
+        
+        if (helpPanel && mountRef.current.contains(helpPanel)) {
+          mountRef.current.removeChild(helpPanel);
+        }
+        
+        // Remove renderer safely
+        if (renderer && renderer.domElement && 
+            renderer.domElement.parentElement === mountRef.current) {
+          mountRef.current.removeChild(renderer.domElement);
+        }
       }
       
-      // Clean up event listeners
-      helpButton.removeEventListener('click', toggleHelp);
+      // Clean up event listeners safely
+      if (helpButton) {
+        helpButton.removeEventListener('click', toggleHelp);
+      }
+      
       if (closeButton) {
-        closeButton.removeEventListener('click', (e) => e.stopPropagation());
+        closeButton.removeEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        });
       }
       
-      if (mountRef.current && renderer.domElement.parentElement === mountRef.current) {
-        mountRef.current.removeChild(renderer.domElement);
+      // Disconnect observer safely
+      if (observer) {
+        observer.disconnect();
       }
-      observer.disconnect();
-      renderer.dispose();
-      controls.dispose();
+      
+      // Dispose of Three.js objects safely
+      if (renderer) {
+        renderer.dispose();
+      }
+      
+      if (controls) {
+        controls.dispose();
+      }
     };
   }, []); // Empty dependency array since props are handled externally
 

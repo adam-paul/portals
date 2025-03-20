@@ -266,9 +266,6 @@ const CreatePortalModal: React.FC = () => {
                   onPositionChange={handlePositionChange}
                 />
               )}
-              <div className="absolute bottom-4 left-4 right-4 p-4 bg-black/70 rounded text-xs text-white/70">
-                Click in the grid to position your portal. Red spheres show existing portals.
-              </div>
             </div>
           </div>
           
