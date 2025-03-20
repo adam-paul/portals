@@ -476,7 +476,7 @@ const WorldVisualizer: React.FC<WorldVisualizerProps> = ({
       }
     };
 
-    // Handle mouse move for position indicator
+    // Handle mouse move for position indicator with improved volume interaction
     const handleMouseMove = (event: MouseEvent) => {
       if (!mountRef.current) return;
       
@@ -488,17 +488,121 @@ const WorldVisualizer: React.FC<WorldVisualizerProps> = ({
       // Update the picking ray with the camera and mouse position
       raycaster.setFromCamera(mouse, camera);
       
-      // Try to intersect with the invisible cube
-      const boxIntersects = raycaster.intersectObject(invisibleCube);
+      // Let's create a 3D grid of points inside the cube for better internal positioning
+      const findInternalGridPosition = () => {
+        // Sample several points along the ray within the cube bounds
+        const sampleCount = 100; // Number of sample points to check
+        const rayDirection = raycaster.ray.direction;
+        const rayOrigin = raycaster.ray.origin;
+        
+        // Find intersections with the cube
+        const boxIntersects = raycaster.intersectObject(invisibleCube);
+        
+        if (boxIntersects.length > 0) {
+          // Get the entry point to the cube
+          const entryPoint = boxIntersects[0].point.clone();
+          
+          // Check if the ray origin is already inside the cube
+          let startPoint;
+          if (Math.abs(rayOrigin.x) <= cubeSize && 
+              Math.abs(rayOrigin.y) <= cubeSize && 
+              Math.abs(rayOrigin.z) <= cubeSize) {
+            startPoint = rayOrigin.clone();
+          } else {
+            startPoint = entryPoint.clone();
+          }
+          
+          // Find the exit point (second intersection or estimate it)
+          let exitPoint;
+          if (boxIntersects.length > 1) {
+            exitPoint = boxIntersects[1].point.clone();
+          } else {
+            // Estimate exit point by extending the ray through the cube
+            const maxDist = cubeSize * 3; // Safe distance to ensure crossing the cube
+            exitPoint = rayOrigin.clone().add(rayDirection.clone().multiplyScalar(maxDist));
+            
+            // Clamp to cube boundaries if needed
+            exitPoint.x = Math.max(-cubeSize, Math.min(cubeSize, exitPoint.x));
+            exitPoint.y = Math.max(-cubeSize, Math.min(cubeSize, exitPoint.y));
+            exitPoint.z = Math.max(-cubeSize, Math.min(cubeSize, exitPoint.z));
+          }
+          
+          // Calculate the total ray distance through the cube
+          const rayLength = startPoint.distanceTo(exitPoint);
+          const stepSize = rayLength / sampleCount;
+          
+          // Now create a series of points along the ray through the cube
+          const gridSize = 10; // Grid cell size for snapping
+          const gridPoints = [];
+          
+          for (let i = 0; i <= sampleCount; i++) {
+            const t = i / sampleCount;
+            // Interpolate between start and exit points
+            const point = new THREE.Vector3().lerpVectors(startPoint, exitPoint, t);
+            
+            // Snap to grid
+            point.x = Math.round(point.x / gridSize) * gridSize;
+            point.y = Math.round(point.y / gridSize) * gridSize;
+            point.z = Math.round(point.z / gridSize) * gridSize;
+            
+            // Make sure point is inside cube bounds
+            if (Math.abs(point.x) <= cubeSize && 
+                Math.abs(point.y) <= cubeSize && 
+                Math.abs(point.z) <= cubeSize) {
+              // Avoid duplicates (due to snapping)
+              const isDuplicate = gridPoints.some(p => 
+                p.x === point.x && p.y === point.y && p.z === point.z
+              );
+              if (!isDuplicate) {
+                gridPoints.push(point.clone());
+              }
+            }
+          }
+          
+          // Add a "depth factor" - prefer points closer to the center of the cube
+          // for more natural placement inside the volume
+          const center = new THREE.Vector3(0, 0, 0);
+          gridPoints.sort((a, b) => {
+            // Weighted combination of distance to ray and distance from cube edge
+            const aDistToCenter = a.distanceTo(center);
+            const bDistToCenter = b.distanceTo(center);
+            
+            // Distance from cube edge (higher for more internal points)
+            const aDepthFactor = cubeSize - Math.max(Math.abs(a.x), Math.abs(a.y), Math.abs(a.z));
+            const bDepthFactor = cubeSize - Math.max(Math.abs(b.x), Math.abs(b.y), Math.abs(b.z));
+            
+            // Prefer central points when looking at the cube from a distance
+            // But prefer front points when close to the cube
+            const cameraDistToCenter = camera.position.distanceTo(center);
+            let weightFactor;
+            
+            if (cameraDistToCenter > cubeSize * 1.5) {
+              // When far, prefer central points
+              weightFactor = 0.7; // Weight for depth vs. distance to ray
+            } else {
+              // When close, prefer points near the ray
+              weightFactor = 0.3;
+            }
+            
+            // Combined score (lower is better)
+            const aScore = weightFactor * (cubeSize - aDepthFactor) + (1 - weightFactor) * aDistToCenter;
+            const bScore = weightFactor * (cubeSize - bDepthFactor) + (1 - weightFactor) * bDistToCenter;
+            
+            return aScore - bScore;
+          });
+          
+          // Return the best point (first after sorting)
+          return gridPoints.length > 0 ? gridPoints[0] : null;
+        }
+        
+        return null;
+      };
       
-      let bestPosition = null;
+      // Try to find an internal grid position first
+      let bestPosition = findInternalGridPosition();
       
-      // If we hit the box, use that intersection point
-      if (boxIntersects.length > 0) {
-        bestPosition = boxIntersects[0].point.clone();
-      }
-      // If no intersection with the box, use a plane intersection approach
-      else {
+      // If no internal position was found, fall back to the plane method
+      if (!bestPosition) {
         // Determine which plane to use based on camera direction
         const cameraDirection = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
         
@@ -520,8 +624,8 @@ const WorldVisualizer: React.FC<WorldVisualizerProps> = ({
           planeNormal.set(0, 0, Math.sign(cameraDirection.z));
         }
         
-        // Position the plane at the far side of the cube relative to the camera
-        const planeDist = cubeSize;
+        // Position the plane at the center of the cube
+        const planeDist = 0;
         const planePosition = new THREE.Vector3().copy(planeNormal).multiplyScalar(planeDist);
         const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(planeNormal, planePosition);
         
@@ -533,34 +637,23 @@ const WorldVisualizer: React.FC<WorldVisualizerProps> = ({
           intersection.y = Math.max(-cubeSize, Math.min(cubeSize, intersection.y));
           intersection.z = Math.max(-cubeSize, Math.min(cubeSize, intersection.z));
           
+          // Snap to grid
+          const gridSize = 10;
+          intersection.x = Math.round(intersection.x / gridSize) * gridSize;
+          intersection.y = Math.round(intersection.y / gridSize) * gridSize;
+          intersection.z = Math.round(intersection.z / gridSize) * gridSize;
+          
           bestPosition = intersection;
         }
         
         // If still no intersection, use the center of the cube as fallback
         if (!bestPosition) {
-          // Project the ray to the center of the cube
-          const cubeCenter = new THREE.Vector3(0, 0, 0);
-          const directionToCenter = cubeCenter.clone().sub(camera.position).normalize();
-          
-          // Scale direction vector to reach into the cube
-          const scaledDirection = directionToCenter.clone().multiplyScalar(1000);
-          bestPosition = camera.position.clone().add(scaledDirection);
-          
-          // Clamp to cube boundaries
-          bestPosition.x = Math.max(-cubeSize, Math.min(cubeSize, bestPosition.x));
-          bestPosition.y = Math.max(-cubeSize, Math.min(cubeSize, bestPosition.y));
-          bestPosition.z = Math.max(-cubeSize, Math.min(cubeSize, bestPosition.z));
+          bestPosition = new THREE.Vector3(0, 0, 0);
         }
       }
       
       // If we found a position in the cube
       if (bestPosition) {
-        // Round to grid units
-        const gridSize = 10;
-        bestPosition.x = Math.round(bestPosition.x / gridSize) * gridSize;
-        bestPosition.y = Math.round(bestPosition.y / gridSize) * gridSize;
-        bestPosition.z = Math.round(bestPosition.z / gridSize) * gridSize;
-        
         // Update the position indicator
         positionIndicator.position.copy(bestPosition);
         positionIndicator.visible = true;
