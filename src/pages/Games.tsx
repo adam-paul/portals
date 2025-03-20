@@ -119,7 +119,7 @@ const Games: React.FC = () => {
               className="text-center mt-16"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 1.2, duration: 1 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
             >
               <CreatePortalModal />
             </motion.div>
