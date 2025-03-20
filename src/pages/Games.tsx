@@ -113,13 +113,19 @@ const Games: React.FC = () => {
               <GameGrid />
             </motion.div>
             
+            {/* Create Portal Button */}
             <motion.div
-              className="text-center mt-16 text-white/50 text-sm"
+              className="text-center mt-16"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 1, duration: 1 }}
+              transition={{ delay: 1.2, duration: 1 }}
             >
-              More games coming soon to Portals...
+              <button 
+                className="text-white/70 hover:text-white text-lg font-bold tracking-wider transition-all duration-300"
+                aria-label="Create a portal to your world"
+              >
+                Create a Portal to Your World
+              </button>
             </motion.div>
           </div>
         </>
