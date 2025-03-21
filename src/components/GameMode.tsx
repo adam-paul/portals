@@ -10,6 +10,7 @@ interface GameModeProps {
 
 const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
   const mountRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [thrust, setThrust] = useState(false);
@@ -47,6 +48,15 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
   };
   
   useEffect(() => {
+    // Initialize background music
+    if (audioRef.current) {
+      audioRef.current.volume = 0.3; // Set to a quiet level
+      audioRef.current.loop = true;
+      audioRef.current.play().catch(err => {
+        console.error("Audio playback failed:", err);
+      });
+    }
+    
     // Detect if user is on mobile
     const checkMobile = () => {
       return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -1200,10 +1210,7 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
         requestAnimationFrame(animate);
       }
       
-      // Update loading state
-      if (isLoading) {
-        setIsLoading(false);
-      }
+      // We'll keep isLoading true until the first frame renders
     };
     
     // Add event listeners
@@ -1223,8 +1230,11 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
       // We'll request device orientation permission when user clicks "Enable Motion Controls" button
     }
     
-    // Start animation
-    requestAnimationFrame(animate);
+    // Start animation and set loading to false after first render
+    requestAnimationFrame(() => {
+      animate();
+      setIsLoading(false);
+    });
     
     // Cleanup function
     return () => {
@@ -1247,6 +1257,12 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
         if (deviceOrientationHandlerRef.current) {
           window.removeEventListener('deviceorientation', deviceOrientationHandlerRef.current);
         }
+      }
+      
+      // Stop the audio when component unmounts
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
       }
       
       // Exit pointer lock if active
@@ -1277,16 +1293,13 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
   
   return (
     <div className="fixed inset-0 z-0">
+      <audio ref={audioRef} src="/audio/dreamsound_gameloop.wav" loop />
       <div 
         ref={mountRef}
         className="w-full h-full"
       />
       
-      {isLoading && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/80 z-10">
-          <div className="text-white text-lg">Initializing space environment...</div>
-        </div>
-      )}
+{/* Loading is handled by the parent Games component */}
       
       {/* Portal Transition Overlay */}
       <AnimatePresence>
