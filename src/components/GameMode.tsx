@@ -1291,7 +1291,7 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
       renderer.dispose();
       scene.clear();
     };
-  }, [isMobile]);
+  }, []);
   
   // Handle exit button click
   const handleExitClick = () => {

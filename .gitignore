@@ -30,3 +30,6 @@ INSTRUCTIONS.md
 # Env
 .env
 .env.development.local
+
+# Local config
+yek.yaml
