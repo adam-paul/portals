@@ -100,7 +100,7 @@ const Games: React.FC = () => {
             >
               <h1 className="text-3xl md:text-4xl font-bold mb-4 tracking-wider">PORTALS</h1>
               <p className="text-white/70 max-w-2xl mx-auto">
-                Explore a collection of games from across the metaverse. Each game offers a unique 
+                Explore a collection of games from across the vibe-cosmos. Each game offers a unique 
                 adventure into the mind of its creator.
               </p>
             </motion.div>

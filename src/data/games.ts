@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { FaEarlybirds, FaPlane, FaSpaghettiMonsterFlying } from "react-icons/fa6";
+import { FaEarlybirds, FaHouseLaptop, FaPlane, FaSpaghettiMonsterFlying } from "react-icons/fa6";
 import React from 'react';
 
 // This is our single source of truth for all games in the application
@@ -67,6 +67,22 @@ export const GAME_DEFINITIONS: GameDefinition[] = [
     radius: 20,
     color: 0x399d4d,
     glowColor: 0x35db1f,
+    coreColor: 0xffffff,
+    collisionRadius: 20
+  },
+  {
+    id: 'hackerhouse-ai',
+    title: 'HackerHouse AI',
+    description: 'Talk to your friends in a virtual hacker house',
+    url: 'http://aihacker.house',
+    icon: React.createElement(FaHouseLaptop, { size: 36, className: "mb-4" }),
+    enabled: true,
+    
+    // 3D world properties
+    position: new THREE.Vector3(-90, 110, -30),
+    radius: 20,
+    color: 0xbe38f3,
+    glowColor: 0x0061ff,
     coreColor: 0xffffff,
     collisionRadius: 20
   },
