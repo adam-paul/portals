@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { FaEarlybirds, FaHouseLaptop, FaPlane, FaSpaghettiMonsterFlying } from "react-icons/fa6";
+import { FaEarlybirds, FaHouseLaptop, FaPersonRunning, FaPlane, FaSpaghettiMonsterFlying } from "react-icons/fa6";
 import React from 'react';
 
 // This is our single source of truth for all games in the application
@@ -31,7 +31,7 @@ export const GAME_DEFINITIONS: GameDefinition[] = [
     enabled: true,
     
     // 3D world properties
-    position: new THREE.Vector3(200, 50, -300),
+    position: new THREE.Vector3(10, 50, -200),
     radius: 20,
     color: 0xffffaa,
     glowColor: 0xffffcc,
@@ -84,6 +84,22 @@ export const GAME_DEFINITIONS: GameDefinition[] = [
     color: 0xbe38f3,
     glowColor: 0x0061ff,
     coreColor: 0xffffff,
+    collisionRadius: 20
+  },
+  {
+    id: 'prkr',
+    title: 'PRKR',
+    description: 'Infinite, satisfying parkour shooter',
+    url: 'https://prkr.run',
+    icon: React.createElement(FaPersonRunning, { size: 36, className: "mb-4" }),
+    enabled: true,
+    
+    // 3D world properties
+    position: new THREE.Vector3(69, 69, 69),
+    radius: 20,
+    color: 0x584578,
+    glowColor: 0x584578,
+    coreColor: 0x584578,
     collisionRadius: 20
   },
   // Add more games here as needed
