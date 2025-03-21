@@ -14,6 +14,7 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [thrust, setThrust] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileControls, setShowMobileControls] = useState(false);
   const [transition, setTransition] = useState<{active: boolean, title: string}>({
@@ -47,10 +48,22 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
     }
   };
   
+  // Toggle mute/unmute for background music
+  const toggleMute = () => {
+    if (audioRef.current) {
+      if (isMuted) {
+        audioRef.current.volume = 0.3;
+      } else {
+        audioRef.current.volume = 0;
+      }
+      setIsMuted(!isMuted);
+    }
+  };
+
   useEffect(() => {
     // Initialize background music
     if (audioRef.current) {
-      audioRef.current.volume = 0.3; // Set to a quiet level
+      audioRef.current.volume = isMuted ? 0 : 0.3;
       audioRef.current.loop = true;
       audioRef.current.play().catch(err => {
         console.error("Audio playback failed:", err);
@@ -1373,6 +1386,15 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
       <div className={`fixed bottom-20 left-6 z-20 text-white/70 text-sm transition-opacity duration-300 ${transition.active ? 'opacity-0' : ''} ${thrust ? 'text-orange-400' : ''}`}>
         {thrust ? 'THRUST ENGAGED' : 'THRUST IDLE'}
       </div>
+      
+      {/* Sound Toggle Button */}
+      <button 
+        onClick={toggleMute}
+        className={`fixed bottom-16 right-6 z-50 text-white/70 hover:text-white text-lg font-bold tracking-wider transition-all duration-300 ${transition.active ? 'opacity-0 pointer-events-none' : ''}`}
+        aria-label={isMuted ? "Unmute sound" : "Mute sound"}
+      >
+        {isMuted ? "UNMUTE" : "MUTE"}
+      </button>
       
       {/* Exit Button */}
       <button 
