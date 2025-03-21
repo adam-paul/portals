@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { FaPlane, FaSpaghettiMonsterFlying } from "react-icons/fa6";
+import { FaEarlybirds, FaPlane, FaSpaghettiMonsterFlying } from "react-icons/fa6";
 import React from 'react';
 
 // This is our single source of truth for all games in the application
@@ -53,6 +53,22 @@ export const GAME_DEFINITIONS: GameDefinition[] = [
     glowColor: 0xBF40BF,
     coreColor: 0x9F2B68,
     collisionRadius: 40
+  },
+  {
+    id: '1p-flappy-bird',
+    title: 'First-person Flappy Bird',
+    description: 'First-person Flappy Bird, from @HolyCoward, who always wondered',
+    url: 'https://firstpersonflappy.com/',
+    icon: React.createElement(FaEarlybirds, { size: 36, className: "mb-4" }),
+    enabled: true,
+    
+    // 3D world properties
+    position: new THREE.Vector3(150, 50, -120),
+    radius: 20,
+    color: 0x399d4d,
+    glowColor: 0x35db1f,
+    coreColor: 0xffffff,
+    collisionRadius: 20
   },
   // Add more games here as needed
 ];
