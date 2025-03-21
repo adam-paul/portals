@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { LockIcon } from 'lucide-react';
+import { LockIcon, Loader2 } from 'lucide-react';
 import WorldVisualizer from './WorldVisualizer';
+import { submitPortal } from '@/api/portal-submissions';
+import { useToast } from '@/components/ui/use-toast';
 
-interface PortalPosition { x: number; y: number; z: number }
-interface FormData {
+export interface PortalPosition { x: number; y: number; z: number }
+export interface FormData {
   title: string;
   description: string;
   url: string;
@@ -19,6 +21,8 @@ interface FormData {
 
 const CreatePortalModal: React.FC = () => {
   const [open, setOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const { toast } = useToast();
   const [formData, setFormData] = useState<FormData>({
     title: '', description: '', url: '', color: '#ffffaa', glowColor: '#ffffcc', coreColor: '#ffffff',
     position: { x: 0, y: 0, z: 0 }, radius: 20,
@@ -41,10 +45,40 @@ const CreatePortalModal: React.FC = () => {
     setFormData(prev => ({ ...prev, position: pos }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Submitting portal:', formData);
-    setOpen(false);
+    setSubmitting(true);
+    
+    try {
+      const result = await submitPortal(formData);
+      
+      if (result.success) {
+        toast({
+          title: "Portal submitted successfully!",
+          description: "Your submission is now under review.",
+        });
+        setOpen(false);
+        setFormData({
+          title: '', description: '', url: '', color: '#ffffaa', glowColor: '#ffffcc', coreColor: '#ffffff',
+          position: { x: 0, y: 0, z: 0 }, radius: 20,
+        });
+      } else {
+        toast({
+          title: "Submission failed",
+          description: "An error occurred while submitting your portal.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error submitting portal:', error);
+      toast({
+        title: "Submission failed",
+        description: "An error occurred while submitting your portal.",
+        variant: "destructive"
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -273,8 +307,16 @@ const CreatePortalModal: React.FC = () => {
             <Button
               type="submit"
               className="bg-blue-600 hover:bg-blue-700 text-white"
+              disabled={submitting}
             >
-              Submit for Approval
+              {submitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                "Submit for Approval"
+              )}
             </Button>
           </DialogFooter>
         </form>
