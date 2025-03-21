@@ -1210,10 +1210,7 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
         requestAnimationFrame(animate);
       }
       
-      // Update loading state
-      if (isLoading) {
-        setIsLoading(false);
-      }
+      // We'll keep isLoading true until the first frame renders
     };
     
     // Add event listeners
@@ -1233,8 +1230,11 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
       // We'll request device orientation permission when user clicks "Enable Motion Controls" button
     }
     
-    // Start animation
-    requestAnimationFrame(animate);
+    // Start animation and set loading to false after first render
+    requestAnimationFrame(() => {
+      animate();
+      setIsLoading(false);
+    });
     
     // Cleanup function
     return () => {
@@ -1299,11 +1299,7 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
         className="w-full h-full"
       />
       
-      {isLoading && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/80 z-10">
-          <div className="text-white text-lg">Initializing space environment...</div>
-        </div>
-      )}
+{/* Loading is handled by the parent Games component */}
       
       {/* Portal Transition Overlay */}
       <AnimatePresence>
