@@ -10,6 +10,7 @@ interface GameModeProps {
 
 const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
   const mountRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [thrust, setThrust] = useState(false);
@@ -47,6 +48,15 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
   };
   
   useEffect(() => {
+    // Initialize background music
+    if (audioRef.current) {
+      audioRef.current.volume = 0.3; // Set to a quiet level
+      audioRef.current.loop = true;
+      audioRef.current.play().catch(err => {
+        console.error("Audio playback failed:", err);
+      });
+    }
+    
     // Detect if user is on mobile
     const checkMobile = () => {
       return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -1249,6 +1259,12 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
         }
       }
       
+      // Stop the audio when component unmounts
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+      }
+      
       // Exit pointer lock if active
       if (document.pointerLockElement === mountNode) {
         document.exitPointerLock();
@@ -1277,6 +1293,7 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
   
   return (
     <div className="fixed inset-0 z-0">
+      <audio ref={audioRef} src="/audio/dreamsound_gameloop.wav" loop />
       <div 
         ref={mountRef}
         className="w-full h-full"
