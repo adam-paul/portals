@@ -69,6 +69,13 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
     }
   };
 
+  // Easter egg state tracking
+  const easterEggRef = useRef({
+    spacebarTapTimestamps: [] as number[], // Tracks when spacebar is RELEASED (not pressed)
+    boostActive: false,
+    boostMultiplier: 2.0, // Double speed when easter egg is active
+  });
+
   useEffect(() => {
     // Initialize background music
     if (audioRef.current) {
@@ -820,6 +827,26 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
         case ' ': // Space bar - Thrust forward
           shipControls.thrust = true;
           setThrust(true);
+          
+          // Check if boost mode should be active (from triple tap) while spacebar is pressed
+          if (easterEggRef.current.boostActive) {
+            // Update flame colors to blue
+            const thrusterParticles = spaceship.getObjectByName('thrusterParticles') as THREE.Group;
+            if (thrusterParticles) {
+              thrusterParticles.children.forEach((particle: THREE.Sprite) => {
+                if (particle.material instanceof THREE.SpriteMaterial) {
+                  // Change to blue flame colors
+                  particle.material.color.setRGB(0.4, 0.6, 1.0);
+                }
+              });
+            }
+            
+            // Change thrust light to blue
+            const thrustLight = spaceship.getObjectByName('thrustLight') as THREE.PointLight;
+            if (thrustLight) {
+              thrustLight.color.setRGB(0.4, 0.6, 1.0);
+            }
+          }
           break;
         case 'a': case 'arrowleft': // Yaw left
           shipControls.left = true;
@@ -854,6 +881,80 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
         case ' ': // Space bar
           shipControls.thrust = false;
           setThrust(false);
+          
+          // Reset boost if it was active (always deactivate on spacebar release)
+          if (easterEggRef.current.boostActive) {
+            easterEggRef.current.boostActive = false;
+            
+            // Reset flame colors to normal
+            const thrusterParticles = spaceship.getObjectByName('thrusterParticles') as THREE.Group;
+            if (thrusterParticles) {
+              thrusterParticles.children.forEach((particle: THREE.Sprite) => {
+                if (particle.material instanceof THREE.SpriteMaterial) {
+                  // Check particle type to determine appropriate color
+                  if (particle.userData.type === 'core') {
+                    particle.material.color.setRGB(1.0, 0.8, 0.3); // Orange-yellow
+                  } else if (particle.userData.type === 'inner') {
+                    particle.material.color.setRGB(1.0, 0.6, 0.2); // Orange
+                  } else {
+                    particle.material.color.setRGB(1.0, 0.4, 0.2); // Red-orange
+                  }
+                }
+              });
+            }
+            
+            // Reset thrust light to normal orange
+            const thrustLight = spaceship.getObjectByName('thrustLight') as THREE.PointLight;
+            if (thrustLight) {
+              thrustLight.color.setRGB(1.0, 0.6, 0.2);
+            }
+          }
+          
+          // Easter egg: Check for triple-tap spacebar
+          // We check on key UP (release) not key down, to ensure actual taps
+          const now = Date.now();
+          const timestamps = easterEggRef.current.spacebarTapTimestamps;
+          
+          // Add current release timestamp
+          timestamps.push(now);
+          
+          // Keep only the last 3 timestamps
+          if (timestamps.length > 3) {
+            timestamps.shift();
+          }
+          
+          // Check if we have 3 timestamps and they're all within 800ms of each other
+          if (timestamps.length === 3) {
+            const isTripleTap = 
+              (timestamps[2] - timestamps[0]) < 800 && // Total time under 800ms
+              (timestamps[1] - timestamps[0]) < 400 && // First interval under 400ms
+              (timestamps[2] - timestamps[1]) < 400;   // Second interval under 400ms
+              
+            if (isTripleTap) {
+              // Activate boost mode on third tap
+              easterEggRef.current.boostActive = true;
+              
+              // Find thruster flame and make it blue
+              const thrusterParticles = spaceship.getObjectByName('thrusterParticles') as THREE.Group;
+              if (thrusterParticles) {
+                thrusterParticles.children.forEach((particle: THREE.Sprite) => {
+                  if (particle.material instanceof THREE.SpriteMaterial) {
+                    // Change to blue flame colors
+                    particle.material.color.setRGB(0.4, 0.6, 1.0);
+                  }
+                });
+              }
+              
+              // Change thrust light to blue
+              const thrustLight = spaceship.getObjectByName('thrustLight') as THREE.PointLight;
+              if (thrustLight) {
+                thrustLight.color.setRGB(0.4, 0.6, 1.0);
+              }
+              
+              // Reset timestamps after activation to prevent immediate re-triggering
+              timestamps.length = 0;
+            }
+          }
           break;
         case 'a': case 'arrowleft':
           shipControls.left = false;
@@ -981,14 +1082,29 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
         const forward = new THREE.Vector3(0, 0, -1);
         forward.applyQuaternion(spaceship.quaternion);
         
-        // Apply acceleration in that direction
-        shipPhysics.velocity.addScaledVector(forward, shipPhysics.acceleration);
+        // Apply acceleration in that direction (with easter egg boost if active)
+        const accelerationMultiplier = easterEggRef.current.boostActive ? 
+          easterEggRef.current.boostMultiplier : 1.0;
+        
+        shipPhysics.velocity.addScaledVector(
+          forward, 
+          shipPhysics.acceleration * accelerationMultiplier
+        );
         
         // Activate thruster effects
         const thrustLight = spaceship.getObjectByName('thrustLight') as THREE.PointLight;
         const particleGroup = spaceship.getObjectByName('thrusterParticles') as THREE.Group;
         
-        if (thrustLight) thrustLight.intensity = 3.5;
+        if (thrustLight) {
+          // Make thrust light brighter and blue when boost is active
+          if (easterEggRef.current.boostActive) {
+            thrustLight.intensity = 5.0;
+            thrustLight.color.setRGB(0.4, 0.6, 1.0);
+          } else {
+            thrustLight.intensity = 3.5;
+            thrustLight.color.setRGB(1.0, 0.6, 0.2);
+          }
+        }
         if (particleGroup) particleGroup.visible = true;
         
         // Animate particles to create a rocket jet effect
@@ -1016,21 +1132,43 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
                 1.3 + Math.random() * 0.1  // Engine is at z=1.3 in ship's local space
               );
               
-              // Scale based on type and random size
+              // Scale based on type and random size (with easter egg boost if active)
               let size;
+              const sizeBoost = easterEggRef.current.boostActive ? 1.5 : 1.0;
+              
               if (userData.type === 'core') {
-                size = 0.6 + Math.random() * 0.4;
+                size = (0.6 + Math.random() * 0.4) * sizeBoost;
                 if (particle.material instanceof THREE.SpriteMaterial) {
-                  particle.material.color.setRGB(
-                    1.0,
-                    0.8 + 0.2 * pulseFactor,
-                    0.3 + 0.3 * pulseFactor
-                  );
+                  if (easterEggRef.current.boostActive) {
+                    // Blue flame for easter egg boost
+                    particle.material.color.setRGB(
+                      0.3,
+                      0.6 + 0.2 * pulseFactor,
+                      1.0
+                    );
+                  } else {
+                    // Normal orange flame
+                    particle.material.color.setRGB(
+                      1.0,
+                      0.8 + 0.2 * pulseFactor,
+                      0.3 + 0.3 * pulseFactor
+                    );
+                  }
                 }
               } else {
                 size = userData.type === 'inner' ? 
-                      (0.2 + Math.random() * 0.2) : 
-                      (0.1 + Math.random() * 0.2);
+                      (0.2 + Math.random() * 0.2) * sizeBoost : 
+                      (0.1 + Math.random() * 0.2) * sizeBoost;
+                
+                // Change color for all particles if boost is active
+                if (easterEggRef.current.boostActive && particle.material instanceof THREE.SpriteMaterial) {
+                  // Blue flame variations for easter egg boost
+                  particle.material.color.setRGB(
+                    0.2 + Math.random() * 0.3,  // low red
+                    0.5 + Math.random() * 0.3,  // medium green
+                    0.8 + Math.random() * 0.2   // high blue
+                  );
+                }
               }
               
               particle.scale.set(size, size, size);
@@ -1134,9 +1272,13 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
         }
       }
       
-      // Limit maximum speed
-      if (shipPhysics.velocity.length() > shipPhysics.maxSpeed) {
-        shipPhysics.velocity.normalize().multiplyScalar(shipPhysics.maxSpeed);
+      // Limit maximum speed (allowing higher speed with easter egg)
+      const effectiveMaxSpeed = easterEggRef.current.boostActive ? 
+          shipPhysics.maxSpeed * easterEggRef.current.boostMultiplier : 
+          shipPhysics.maxSpeed;
+          
+      if (shipPhysics.velocity.length() > effectiveMaxSpeed) {
+        shipPhysics.velocity.normalize().multiplyScalar(effectiveMaxSpeed);
       }
       
       // Apply drag (space has less drag)
