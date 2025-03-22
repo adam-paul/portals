@@ -6,6 +6,7 @@ import { GAME_DEFINITIONS } from '@/data/games';
 import { PlayerData } from '@/types/player';
 import { updateMultiplayerShips, clearMultiplayerShips } from '@/utils/multiplayer';
 import { getWebSocketServerUrl } from '@/config/multiplayer';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface GameModeProps {
   onExit: () => void;
@@ -22,6 +23,9 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
     active: false,
     title: ''
   });
+  
+  // Mobile detection
+  const isMobile = useIsMobile();
   
   // WebSocket connection reference
   const wsRef = useRef<WebSocket | null>(null);
@@ -693,8 +697,23 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
     
     // Handle clicks to request pointer lock
     const handleClick = () => {
-      if (!mouse.isLocked) {
+      if (!mouse.isLocked && !isMobile) {
         mountNode.requestPointerLock();
+      }
+    };
+    
+    // Handle touch events for mobile
+    const handleTouchStart = () => {
+      if (isMobile) {
+        shipControls.thrust = true;
+        setThrust(true);
+      }
+    };
+    
+    const handleTouchEnd = () => {
+      if (isMobile) {
+        shipControls.thrust = false;
+        setThrust(false);
       }
     };
     
@@ -1341,6 +1360,13 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
     window.addEventListener('resize', handleResize);
     window.addEventListener('mousemove', handleMouseMove);
     mountNode.addEventListener('click', handleClick);
+    
+    // Add touch events for mobile
+    if (isMobile) {
+      mountNode.addEventListener('touchstart', handleTouchStart);
+      mountNode.addEventListener('touchend', handleTouchEnd);
+    }
+    
     document.addEventListener('pointerlockchange', updatePointerLock);
     
     // Setup complete
@@ -1362,6 +1388,13 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('mousemove', handleMouseMove);
       mountNode.removeEventListener('click', handleClick);
+      
+      // Remove touch events for mobile
+      if (isMobile) {
+        mountNode.removeEventListener('touchstart', handleTouchStart);
+        mountNode.removeEventListener('touchend', handleTouchEnd);
+      }
+      
       document.removeEventListener('pointerlockchange', updatePointerLock);
       
       // Clean up standard event listeners
@@ -1446,16 +1479,26 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
         )}
       </AnimatePresence>
       
-      {/* Controls hint */}
-      <div className={`fixed top-6 left-6 z-20 text-white/70 text-sm transition-opacity duration-300 ${transition.active ? 'opacity-20' : 'opacity-100'}`}>
-        <p>W/S - Pitch up/down</p>
-        <p>A/D - Rotate left/right</p>
-        <p>Q/E - Roll left/right</p>
-        <p>R/F - Move up/down</p>
-        <p>SPACE - Engine thrust (forward)</p>
-        <p>LMOUSE - Mouse Control</p>
-        <p>ESC - Menu</p>
-      </div>
+      {/* Controls hint - show desktop controls when not on mobile */}
+      {!isMobile && (
+        <div className={`fixed top-6 left-6 z-20 text-white/70 text-sm transition-opacity duration-300 ${transition.active ? 'opacity-20' : 'opacity-100'}`}>
+          <p>W/S - Pitch up/down</p>
+          <p>A/D - Rotate left/right</p>
+          <p>Q/E - Roll left/right</p>
+          <p>R/F - Move up/down</p>
+          <p>SPACE - Engine thrust (forward)</p>
+          <p>LMOUSE - Mouse Control</p>
+          <p>ESC - Menu</p>
+        </div>
+      )}
+      
+      {/* Mobile controls hint */}
+      {isMobile && (
+        <div className={`fixed top-6 left-6 z-20 text-white/70 text-sm transition-opacity duration-300 ${transition.active ? 'opacity-20' : 'opacity-100'}`}>
+          <p>TAP ANYWHERE - Engine thrust</p>
+          <p>Hold to maintain thrust</p>
+        </div>
+      )}
       
       {/* Thrust indicator */}
       <div className={`fixed bottom-20 left-6 z-20 text-white/70 text-sm transition-opacity duration-300 ${transition.active ? 'opacity-0' : ''} ${thrust ? 'text-orange-400' : ''}`}>
