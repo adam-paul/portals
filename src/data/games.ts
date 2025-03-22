@@ -74,7 +74,7 @@ export const GAME_DEFINITIONS: GameDefinition[] = [
     id: 'hackerhouse-ai',
     title: 'HackerHouse AI',
     description: 'Talk to your friends in a virtual hacker house',
-    url: 'http://aihacker.house',
+    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     icon: React.createElement(FaHouseLaptop, { size: 36, className: "mb-4" }),
     enabled: true,
     
