@@ -18,8 +18,6 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [thrust, setThrust] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [showMobileControls, setShowMobileControls] = useState(false);
   const [transition, setTransition] = useState<{active: boolean, title: string}>({
     active: false,
     title: ''
@@ -30,32 +28,6 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
   const playerIdRef = useRef<string>('');
   const sceneRef = useRef<THREE.Scene | null>(null);
   const shipRef = useRef<THREE.Group | null>(null);
-  
-  // Handle device orientation handlers
-  const deviceOrientationHandlerRef = useRef<(event: DeviceOrientationEvent) => void>();
-  
-  // Request permission for device orientation on iOS
-  const requestDeviceOrientationPermission = () => {
-    if (typeof DeviceOrientationEvent !== 'undefined' && 
-        typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-      (DeviceOrientationEvent as any).requestPermission()
-        .then((permissionState: string) => {
-          if (permissionState === 'granted') {
-            if (deviceOrientationHandlerRef.current) {
-              window.addEventListener('deviceorientation', deviceOrientationHandlerRef.current);
-            }
-            setShowMobileControls(true);
-          }
-        })
-        .catch(console.error);
-    } else {
-      // Handle non-iOS devices
-      if (deviceOrientationHandlerRef.current) {
-        window.addEventListener('deviceorientation', deviceOrientationHandlerRef.current);
-      }
-      setShowMobileControls(true);
-    }
-  };
   
   // Toggle mute/unmute for background music
   const toggleMute = () => {
@@ -86,12 +58,7 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
       });
     }
     
-    // Detect if user is on mobile
-    const checkMobile = () => {
-      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    };
-    
-    setIsMobile(checkMobile());
+    // Initialize scene setup
     
     if (!mountRef.current) return;
     
@@ -149,16 +116,7 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
       downward: false
     };
     
-    // Mobile orientation controls
-    const orientationControls = {
-      beta: 0,  // x-axis rotation (front-to-back)
-      gamma: 0, // y-axis rotation (left-to-right)
-      alpha: 0, // z-axis rotation
-      lastBeta: 0,
-      lastGamma: 0,
-      calibrated: false,
-      sensitivity: 0.5,
-    };
+    // Ship controls
     
     // Create a starfield backdrop
     const createStarfield = () => {
@@ -735,86 +693,14 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
     
     // Handle clicks to request pointer lock
     const handleClick = () => {
-      if (!mouse.isLocked && !isMobile) {
+      if (!mouse.isLocked) {
         mountNode.requestPointerLock();
       }
     };
     
-    // Mobile device orientation handler
-    const handleDeviceOrientation = (event: DeviceOrientationEvent) => {
-      if (!isMobile || shipPhysics.slowMotion) return;
-      
-      // Calibrate on first reading
-      if (!orientationControls.calibrated && event.beta !== null && event.gamma !== null) {
-        orientationControls.lastBeta = event.beta;
-        orientationControls.lastGamma = event.gamma;
-        orientationControls.calibrated = true;
-        return;
-      }
-      
-      if (event.beta !== null && event.gamma !== null) {
-        // Get the current orientation
-        orientationControls.beta = event.beta;  // Forward/backward tilt (-180 to 180)
-        orientationControls.gamma = event.gamma; // Left/right tilt (-90 to 90)
-        orientationControls.alpha = event.alpha || 0; // Compass direction (0-360)
-        
-        // Calculate changes from last reading
-        const betaDiff = orientationControls.beta - orientationControls.lastBeta;
-        const gammaDiff = orientationControls.gamma - orientationControls.lastGamma;
-        
-        // Map device orientation to ship controls
-        // Tilt forward (negative beta change) for pitch down
-        shipControls.pitchDown = betaDiff < -1 * orientationControls.sensitivity;
-        
-        // Tilt backward (positive beta change) for pitch up
-        shipControls.pitchUp = betaDiff > 1 * orientationControls.sensitivity;
-        
-        // Tilt left (negative gamma change) to yaw left
-        shipControls.left = gammaDiff < -1 * orientationControls.sensitivity;
-        
-        // Tilt right (positive gamma change) to yaw right
-        shipControls.right = gammaDiff > 1 * orientationControls.sensitivity;
-        
-        // Save current values for next comparison
-        orientationControls.lastBeta = orientationControls.beta;
-        orientationControls.lastGamma = orientationControls.gamma;
-      }
-    };
+    // Handle mouse movement for flight controls
     
-    // Store the handler in the ref so it can be accessed outside useEffect
-    deviceOrientationHandlerRef.current = handleDeviceOrientation;
-    
-    // Mobile touch event handlers
-    const handleTouchStart = (e: TouchEvent) => {
-      if (!isMobile) return;
-      
-      if (e.target instanceof HTMLButtonElement) {
-        // Don't trigger thrust when pressing UI buttons
-        return;
-      }
-      
-      // Activate thruster on touch start
-      shipControls.thrust = true;
-      setThrust(true);
-      
-      // Prevent default to avoid scrolling, zooming, etc.
-      e.preventDefault();
-    };
-    
-    const handleTouchEnd = (e: TouchEvent) => {
-      if (!isMobile) return;
-      
-      // Deactivate thruster on touch end
-      shipControls.thrust = false;
-      setThrust(false);
-      
-      e.preventDefault();
-    };
-    
-    const handleTouchMove = (e: TouchEvent) => {
-      if (!isMobile) return;
-      e.preventDefault(); // Prevent scrolling
-    };
+    // Handle keyboard input
     
     // Handle key down
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1457,14 +1343,7 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
     mountNode.addEventListener('click', handleClick);
     document.addEventListener('pointerlockchange', updatePointerLock);
     
-    // Add mobile touch events if on mobile
-    if (isMobile) {
-      mountNode.addEventListener('touchstart', handleTouchStart as EventListener, { passive: false });
-      mountNode.addEventListener('touchend', handleTouchEnd as EventListener, { passive: false });
-      mountNode.addEventListener('touchmove', handleTouchMove as EventListener, { passive: false });
-      
-      // We'll request device orientation permission when user clicks "Enable Motion Controls" button
-    }
+    // Setup complete
     
     // Start animation and set loading to false after first render
     requestAnimationFrame(() => {
@@ -1485,15 +1364,7 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
       mountNode.removeEventListener('click', handleClick);
       document.removeEventListener('pointerlockchange', updatePointerLock);
       
-      // Remove mobile-specific event listeners
-      if (isMobile) {
-        mountNode.removeEventListener('touchstart', handleTouchStart as EventListener);
-        mountNode.removeEventListener('touchend', handleTouchEnd as EventListener);
-        mountNode.removeEventListener('touchmove', handleTouchMove as EventListener);
-        if (deviceOrientationHandlerRef.current) {
-          window.removeEventListener('deviceorientation', deviceOrientationHandlerRef.current);
-        }
-      }
+      // Clean up standard event listeners
       
       // Clean up WebSocket connection
       if (wsRef.current) {
@@ -1575,46 +1446,16 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
         )}
       </AnimatePresence>
       
-      {/* Mobile Controls Prompt */}
-      {isMobile && !showMobileControls && !isLoading && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-40">
-          <div className="bg-space-gray/70 border border-white/20 p-8 rounded-lg text-center">
-            <h2 className="text-2xl font-bold text-white mb-6">Mobile Controls</h2>
-            <p className="text-white/80 mb-6">
-              Tilt your device to steer the ship.<br/>
-              Tap and hold anywhere to engage thrusters.
-            </p>
-            <button 
-              onClick={() => requestDeviceOrientationPermission()}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors"
-            >
-              Enable Motion Controls
-            </button>
-          </div>
-        </div>
-      )}
-      
-      {/* Controls hint - Different for mobile */}
-      {!isMobile && (
-        <div className={`fixed top-6 left-6 z-20 text-white/70 text-sm transition-opacity duration-300 ${transition.active ? 'opacity-20' : 'opacity-100'}`}>
-          <p>W/S - Pitch up/down</p>
-          <p>A/D - Rotate left/right</p>
-          <p>Q/E - Roll left/right</p>
-          <p>R/F - Move up/down</p>
-          <p>SPACE - Engine thrust (forward)</p>
-          <p>LMOUSE - Mouse Control</p>
-          <p>ESC - Menu</p>
-        </div>
-      )}
-      
-      {/* Mobile Controls hint */}
-      {isMobile && showMobileControls && (
-        <div className={`fixed top-6 left-6 z-20 text-white/70 text-sm transition-opacity duration-300 ${transition.active ? 'opacity-20' : 'opacity-100'}`}>
-          <p>Tilt forward/back - Pitch</p>
-          <p>Tilt left/right - Turn</p>
-          <p>Tap & hold - Thrust</p>
-        </div>
-      )}
+      {/* Controls hint */}
+      <div className={`fixed top-6 left-6 z-20 text-white/70 text-sm transition-opacity duration-300 ${transition.active ? 'opacity-20' : 'opacity-100'}`}>
+        <p>W/S - Pitch up/down</p>
+        <p>A/D - Rotate left/right</p>
+        <p>Q/E - Roll left/right</p>
+        <p>R/F - Move up/down</p>
+        <p>SPACE - Engine thrust (forward)</p>
+        <p>LMOUSE - Mouse Control</p>
+        <p>ESC - Menu</p>
+      </div>
       
       {/* Thrust indicator */}
       <div className={`fixed bottom-20 left-6 z-20 text-white/70 text-sm transition-opacity duration-300 ${transition.active ? 'opacity-0' : ''} ${thrust ? 'text-orange-400' : ''}`}>
