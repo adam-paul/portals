@@ -1,5 +1,10 @@
 import * as THREE from 'three';
-import { FaEarlybirds, FaHouseLaptop, FaPersonRunning, FaPlane, FaSpaghettiMonsterFlying } from "react-icons/fa6";
+import { FaEarlybirds,
+         FaHouseLaptop,
+         FaPersonRunning,
+         FaPlane, 
+         FaRobot, 
+         FaSpaghettiMonsterFlying } from "react-icons/fa6";
 import React from 'react';
 
 // This is our single source of truth for all games in the application
@@ -101,6 +106,22 @@ export const GAME_DEFINITIONS: GameDefinition[] = [
     glowColor: 0x584578,
     coreColor: 0x584578,
     collisionRadius: 20
+  },
+  {
+    id: 'dingbotics',
+    title: 'Dingbotics',
+    description: 'Abandon All Hope, Ye Who Enter Here',
+    url: 'https://dingbotics.com/',
+    icon: React.createElement(FaRobot, { size: 36, className: "mb-4" }),
+    enabled: true,
+    
+    // 3D world properties
+    position: new THREE.Vector3(-100, -100, -100),
+    radius: 40,
+    color: 0x2e2e29,
+    glowColor: 0xf3fdce,
+    coreColor: 0x584578,
+    collisionRadius: 40
   },
   // Add more games here as needed
 ];
