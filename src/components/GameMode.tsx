@@ -3,6 +3,9 @@ import * as THREE from 'three';
 import { GameLinkObject } from './GameLink';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GAME_DEFINITIONS } from '@/data/games';
+import { PlayerData } from '@/types/player';
+import { updateMultiplayerShips, clearMultiplayerShips } from '@/utils/multiplayer';
+import { getWebSocketServerUrl } from '@/config/multiplayer';
 
 interface GameModeProps {
   onExit: () => void;
@@ -21,6 +24,12 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
     active: false,
     title: ''
   });
+  
+  // WebSocket connection reference
+  const wsRef = useRef<WebSocket | null>(null);
+  const playerIdRef = useRef<string>('');
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const shipRef = useRef<THREE.Group | null>(null);
   
   // Handle device orientation handlers
   const deviceOrientationHandlerRef = useRef<(event: DeviceOrientationEvent) => void>();
@@ -84,6 +93,7 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
     
     // Initialize Three.js scene
     const scene = new THREE.Scene();
+    sceneRef.current = scene;
     scene.background = new THREE.Color(0x000008); // Slightly brighter space blue
     
     // Camera setup
@@ -599,6 +609,7 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
     
     // Create spaceship instance
     const spaceship = createSpaceship();
+    shipRef.current = spaceship;
     scene.add(spaceship);
     
     // Create a grid for reference
@@ -1182,12 +1193,82 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
       camera.lookAt(spaceship.position);
     };
     
+    // Connect to WebSocket server for multiplayer
+    const connectWebSocket = () => {
+      // Get the WebSocket URL from our config
+      const wsUrl = getWebSocketServerUrl();
+      
+      try {
+        const ws = new WebSocket(wsUrl);
+        wsRef.current = ws;
+        
+        ws.onopen = () => {
+          console.log('Connected to multiplayer server');
+        };
+        
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            
+            // Check if this is the initial player ID message
+            if (data && typeof data === 'object' && !Array.isArray(data) && data.type === 'playerId') {
+              playerIdRef.current = data.id;
+              console.log('Received player ID:', data.id);
+              return;
+            }
+            
+            // Otherwise, treat as player data array
+            const playersData: PlayerData[] = data;
+            
+            // Update other player ships in the scene
+            updateMultiplayerShips(playersData, scene, playerIdRef.current);
+          } catch (error) {
+            console.error('Failed to parse player data:', error);
+          }
+        };
+        
+        ws.onclose = () => {
+          console.log('Disconnected from multiplayer server');
+        };
+        
+        ws.onerror = (error) => {
+          console.error('WebSocket error:', error);
+        };
+        
+        return ws;
+      } catch (error) {
+        console.error('Failed to connect to multiplayer server:', error);
+        return null;
+      }
+    };
+    
+    // Send local player data to the server
+    const sendPlayerData = () => {
+      if (wsRef.current?.readyState === WebSocket.OPEN && shipRef.current) {
+        const playerData: PlayerData = {
+          id: playerIdRef.current,
+          position: shipRef.current.position.toArray() as [number, number, number],
+          quaternion: shipRef.current.quaternion.toArray() as [number, number, number, number],
+          timestamp: Date.now()
+        };
+        wsRef.current.send(JSON.stringify(playerData));
+      }
+    };
+    
+    // Initialize WebSocket connection
+    connectWebSocket();
+
     // Animation loop
     const animate = () => {
       updateShipPhysics();
       updateCamera();
       
       const time = performance.now() * 0.001; // Convert to seconds
+      
+      // Send player data every other frame for performance
+      if (time % 0.1 < 0.05) {
+        sendPlayerData();
+      }
       
       // Animate nebulae with subtle pulsing
       if (nebulae) {
@@ -1270,6 +1351,17 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
         if (deviceOrientationHandlerRef.current) {
           window.removeEventListener('deviceorientation', deviceOrientationHandlerRef.current);
         }
+      }
+      
+      // Clean up WebSocket connection
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+      
+      // Clear multiplayer ships
+      if (scene) {
+        clearMultiplayerShips(scene);
       }
       
       // Stop the audio when component unmounts
