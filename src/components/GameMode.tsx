@@ -1208,7 +1208,17 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
         
         ws.onmessage = (event) => {
           try {
-            const playersData: PlayerData[] = JSON.parse(event.data);
+            const data = JSON.parse(event.data);
+            
+            // Check if this is the initial player ID message
+            if (data && typeof data === 'object' && !Array.isArray(data) && data.type === 'playerId') {
+              playerIdRef.current = data.id;
+              console.log('Received player ID:', data.id);
+              return;
+            }
+            
+            // Otherwise, treat as player data array
+            const playersData: PlayerData[] = data;
             
             // Update other player ships in the scene
             updateMultiplayerShips(playersData, scene, playerIdRef.current);

@@ -9,6 +9,9 @@ const players: Map<string, PlayerData> = new Map();
 wss.on('connection', (ws: WebSocket) => {
   const playerId = randomUUID();
   console.log(`Player connected: ${playerId}`);
+  
+  // Send the player ID to the client immediately after connection
+  ws.send(JSON.stringify({ type: 'playerId', id: playerId }));
 
   ws.on('message', (data: string) => {
     try {
