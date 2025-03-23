@@ -53,13 +53,11 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
   });
 
   useEffect(() => {
-    // Initialize background music
+    // Initialize background music settings, but don't play it yet
+    // It will be played on first user interaction (mobile tap or keyboard press)
     if (audioRef.current) {
       audioRef.current.volume = isMuted ? 0 : 0.3;
       audioRef.current.loop = true;
-      audioRef.current.play().catch(err => {
-        console.error("Audio playback failed:", err);
-      });
     }
     
     // Initialize scene setup
@@ -695,9 +693,9 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
       }
     };
     
-    // Handle clicks to request pointer lock
+    // Handle clicks to request pointer lock (desktop only)
     const handleClick = () => {
-      if (!mouse.isLocked && !isMobile) {
+      if (!mouse.isLocked) {
         mountNode.requestPointerLock();
       }
     };
@@ -707,6 +705,13 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
       if (isMobile) {
         shipControls.thrust = true;
         setThrust(true);
+        
+        // Play audio on first interaction if it hasn't started yet
+        if (audioRef.current && !audioRef.current.played.length) {
+          audioRef.current.play().catch(err => {
+            console.error("Audio playback failed:", err);
+          });
+        }
       }
     };
     
@@ -726,6 +731,13 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
       if (e.key === 'Escape') {
         setShowExitDialog(true);
         return;
+      }
+      
+      // Play audio on first interaction if it hasn't started yet
+      if (audioRef.current && !audioRef.current.played.length) {
+        audioRef.current.play().catch(err => {
+          console.error("Audio playback failed:", err);
+        });
       }
       
       switch (e.key.toLowerCase()) {
@@ -1358,16 +1370,17 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     window.addEventListener('resize', handleResize);
-    window.addEventListener('mousemove', handleMouseMove);
-    mountNode.addEventListener('click', handleClick);
     
-    // Add touch events for mobile
-    if (isMobile) {
+    if (!isMobile) {
+      // Desktop-specific listeners
+      window.addEventListener('mousemove', handleMouseMove);
+      mountNode.addEventListener('click', handleClick);
+      document.addEventListener('pointerlockchange', updatePointerLock);
+    } else {
+      // Mobile-specific listeners
       mountNode.addEventListener('touchstart', handleTouchStart);
       mountNode.addEventListener('touchend', handleTouchEnd);
     }
-    
-    document.addEventListener('pointerlockchange', updatePointerLock);
     
     // Setup complete
     
@@ -1386,16 +1399,17 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('resize', handleResize);
-      window.removeEventListener('mousemove', handleMouseMove);
-      mountNode.removeEventListener('click', handleClick);
       
-      // Remove touch events for mobile
-      if (isMobile) {
+      if (!isMobile) {
+        // Remove desktop-specific listeners
+        window.removeEventListener('mousemove', handleMouseMove);
+        mountNode.removeEventListener('click', handleClick);
+        document.removeEventListener('pointerlockchange', updatePointerLock);
+      } else {
+        // Remove mobile-specific listeners
         mountNode.removeEventListener('touchstart', handleTouchStart);
         mountNode.removeEventListener('touchend', handleTouchEnd);
       }
-      
-      document.removeEventListener('pointerlockchange', updatePointerLock);
       
       // Clean up standard event listeners
       
@@ -1429,7 +1443,7 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
       renderer.dispose();
       scene.clear();
     };
-  }, []);
+  }, [isMobile]);
   
   // Handle exit button click
   const handleExitClick = () => {
