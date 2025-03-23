@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import StarField from '@/components/StarField';
 import PortalAnimation from '@/components/PortalAnimation';
 import Navbar from '@/components/Navbar';
+import { getEnabledGames } from '@/data/games';
 
 const Index: React.FC = () => {
   const navigate = useNavigate();
@@ -27,6 +28,19 @@ const Index: React.FC = () => {
       navigate('/games?gameMode=true');
     }, 1000);
   };
+
+  const handleRandomGame = () => {
+    setIsCollapsing(true);
+    
+    // Get a random enabled game
+    const enabledGames = getEnabledGames();
+    const randomGame = enabledGames[Math.floor(Math.random() * enabledGames.length)];
+    
+    // Navigate after collapse animation completes
+    setTimeout(() => {
+      window.location.href = randomGame.url;
+    }, 1000);
+  };
   
   return (
     <div className="space-container">
@@ -47,6 +61,11 @@ const Index: React.FC = () => {
             
             {/* Portal container with fixed dimensions to prevent layout shifting */}
             <div className="w-60 h-60 md:w-80 md:h-80 relative flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <span className="text-2xl font-bold tracking-wider text-space-light/20">
+                  ENTER
+                </span>
+              </div>
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ 
@@ -61,15 +80,15 @@ const Index: React.FC = () => {
                 className="absolute inset-0 cursor-pointer"
                 onClick={handlePortalClick}
               >
-                <PortalAnimation onLoad={() => setIsLoaded(true)} />
+                <PortalAnimation onLoad={() => setIsLoaded(true)} pulseGlow={true} />
               </motion.div>
             </div>
             
-            {/* Enter button that only appears after portal is loaded */}
+            {/* Buttons that only appear after portal is loaded */}
             <AnimatePresence>
               {isLoaded && !isCollapsing && (
                 <motion.div
-                  className="mt-16 relative z-10"
+                  className="mt-16 relative z-10 flex flex-col items-center gap-4"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -77,9 +96,15 @@ const Index: React.FC = () => {
                 >
                   <Link to="/games">
                     <button className="text-2xl font-bold tracking-wider text-space-light hover:text-space-light/80 transition-all duration-300">
-                      ENTER
+                      ALL VIBEGAMES
                     </button>
                   </Link>
+                  <button 
+                    onClick={handleRandomGame}
+                    className="text-2xl font-bold tracking-wider text-space-light hover:text-space-light/80 transition-all duration-300"
+                  >
+                    I'M FEELING LUCKY
+                  </button>
                 </motion.div>
               )}
             </AnimatePresence>
