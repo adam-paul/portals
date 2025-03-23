@@ -117,11 +117,11 @@ export const GAME_DEFINITIONS: GameDefinition[] = [
     
     // 3D world properties
     position: new THREE.Vector3(-100, -100, -100),
-    radius: 40,
+    radius: 20,
     color: 0x2e2e29,
     glowColor: 0xf3fdce,
     coreColor: 0x584578,
-    collisionRadius: 40
+    collisionRadius: 20
   },
   // Add more games here as needed
 ];
