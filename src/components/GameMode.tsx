@@ -33,6 +33,16 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
   const sceneRef = useRef<THREE.Scene | null>(null);
   const shipRef = useRef<THREE.Group | null>(null);
   
+  // Create reference for tracking orientation state
+  const orientationRef = useRef({
+    initialBeta: null as number | null,
+    initialGamma: null as number | null,
+    isCalibrated: false
+  });
+  
+  // Reference for double tap detection
+  const touchTimestampRef = useRef<number | null>(null);
+  
   // Toggle mute/unmute for background music
   const toggleMute = () => {
     if (audioRef.current) {
@@ -712,6 +722,17 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
             console.error("Audio playback failed:", err);
           });
         }
+        
+        // Double tap detection for orientation recalibration
+        const now = Date.now();
+        const lastTouch = touchTimestampRef.current;
+        touchTimestampRef.current = now;
+        
+        // If last touch was less than 300ms ago, consider it a double tap
+        if (lastTouch && (now - lastTouch < 300)) {
+          // Reset orientation calibration on double tap
+          orientationRef.current.isCalibrated = false;
+        }
       }
     };
     
@@ -725,11 +746,34 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
     // Handle device orientation for tilt controls on mobile
     const handleDeviceOrientation = (e: DeviceOrientationEvent) => {
       if (isMobile && e.gamma !== null && e.beta !== null) {
-        // Convert gamma (-90 to 90, left-right tilt) to yaw
-        const yawAngle = e.gamma * 0.002;
+        // Initialize reference orientation if not already done
+        if (!orientationRef.current.isCalibrated) {
+          orientationRef.current.initialBeta = e.beta;
+          orientationRef.current.initialGamma = e.gamma;
+          orientationRef.current.isCalibrated = true;
+          return; // Skip the first reading to establish baseline
+        }
         
-        // Convert beta (-180 to 180, front-back tilt) to pitch
-        const pitchAngle = e.beta * 0.002;
+        if (orientationRef.current.initialBeta === null || 
+            orientationRef.current.initialGamma === null) {
+          return;
+        }
+        
+        // Calculate tilt relative to initial orientation
+        const deltaBeta = (e.beta - orientationRef.current.initialBeta);
+        const deltaGamma = (e.gamma - orientationRef.current.initialGamma);
+        
+        // Convert to rotation angles with damping factor
+        const yawAngle = deltaGamma * 0.0015; // Left/right tilt controls yaw
+        const pitchAngle = deltaBeta * 0.0015; // Forward/back tilt controls pitch
+        
+        // Get current ship orientation for auto-leveling calculation
+        const shipRotation = new THREE.Euler().setFromQuaternion(spaceship.quaternion);
+        
+        // Create auto-leveling effect (gently return to level flight)
+        const autoLevelFactor = 0.01;
+        const autoLevelPitch = -shipRotation.x * autoLevelFactor;
+        const autoLevelRoll = -shipRotation.z * autoLevelFactor;
         
         // Create rotation quaternions for the ship
         const yawQuat = new THREE.Quaternion().setFromAxisAngle(
@@ -737,15 +781,32 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
           -yawAngle
         );
         
+        // Get local right and forward axes
         const rightAxis = new THREE.Vector3(1, 0, 0).applyQuaternion(spaceship.quaternion);
+        const forwardAxis = new THREE.Vector3(0, 0, -1).applyQuaternion(spaceship.quaternion);
+        
+        // Apply pitch based on forward/back tilt
         const pitchQuat = new THREE.Quaternion().setFromAxisAngle(
-          rightAxis, // Local right axis for pitch
+          rightAxis,
           -pitchAngle
         );
         
-        // Apply rotations in local space
-        spaceship.quaternion.premultiply(yawQuat);
-        spaceship.quaternion.premultiply(pitchQuat);
+        // Apply auto-leveling for pitch and roll
+        const levelPitchQuat = new THREE.Quaternion().setFromAxisAngle(
+          rightAxis,
+          autoLevelPitch
+        );
+        
+        const levelRollQuat = new THREE.Quaternion().setFromAxisAngle(
+          forwardAxis,
+          autoLevelRoll
+        );
+        
+        // Apply rotations in sequence with damping
+        spaceship.quaternion.premultiply(yawQuat);     // Yaw (turn left/right)
+        spaceship.quaternion.premultiply(pitchQuat);   // Pitch (nose up/down)
+        spaceship.quaternion.premultiply(levelPitchQuat); // Auto-level pitch
+        spaceship.quaternion.premultiply(levelRollQuat);  // Auto-level roll
       }
     };
     
@@ -1540,6 +1601,8 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
         <div className={`fixed top-6 left-6 z-20 text-white/70 text-sm transition-opacity duration-300 ${transition.active ? 'opacity-20' : 'opacity-100'}`}>
           <p>TAP ANYWHERE - Engine thrust</p>
           <p>Hold to maintain thrust</p>
+          <p>TILT PHONE - Steer ship</p>
+          <p>DOUBLE TAP - Recalibrate controls</p>
         </div>
       )}
       
