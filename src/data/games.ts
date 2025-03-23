@@ -133,7 +133,7 @@ export const GAME_DEFINITIONS: GameDefinition[] = [
     enabled: true,
     
     // 3D world properties
-    position: new THREE.Vector3(-20, 40, 20),
+    position: new THREE.Vector3(-20, 80, 40),
     radius: 20,
     color: 0x48e246,
     glowColor: 0xf3fdce,
