@@ -765,7 +765,7 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
         
         // Convert to rotation angles with damping factor
         const yawAngle = deltaGamma * 0.0015; // Left/right tilt controls yaw
-        const pitchAngle = deltaBeta * 0.0015; // Forward/back tilt controls pitch
+        const pitchAngle = -deltaBeta * 0.0015; // Forward/back tilt controls pitch (inverted)
         
         // Get current ship orientation for auto-leveling calculation
         const shipRotation = new THREE.Euler().setFromQuaternion(spaceship.quaternion);
