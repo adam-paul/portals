@@ -11,8 +11,47 @@ const Index: React.FC = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isCollapsing, setIsCollapsing] = useState(false);
   
-  // Set loaded state after a short delay to ensure animations are ready
+  // Listen for popstate events (browser back/forward buttons) and visibility changes
   useEffect(() => {
+    const resetState = () => {
+      // Reset the states when user navigates back to this page
+      setIsCollapsing(false);
+      setIsLoaded(false);
+      
+      // Re-trigger the loading sequence
+      setTimeout(() => {
+        setIsLoaded(true);
+      }, 800);
+    };
+    
+    // Handle browser back button and history navigation
+    window.addEventListener('popstate', resetState);
+    
+    // Create a named handler for visibility change
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        resetState();
+      }
+    };
+    
+    // Handle when user returns to the page after visiting another page or tab
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Handle when a user returns to the tab
+    window.addEventListener('focus', resetState);
+    
+    return () => {
+      window.removeEventListener('popstate', resetState);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', resetState);
+    };
+  }, []);
+  
+  // Reset states and set loaded state after a short delay to ensure animations are ready
+  useEffect(() => {
+    // Reset the collapsing state whenever the component mounts
+    setIsCollapsing(false);
+    
     const timer = setTimeout(() => {
       setIsLoaded(true);
     }, 800);
