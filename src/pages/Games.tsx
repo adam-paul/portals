@@ -105,6 +105,16 @@ const Games: React.FC = () => {
               </p>
             </motion.div>
             
+            {/* Create Portal Button above game grid */}
+            <motion.div
+              className="text-center mb-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+            >
+              <CreatePortalModal />
+            </motion.div>
+            
             <motion.div
               variants={containerVariants}
               initial="hidden"
