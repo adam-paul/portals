@@ -722,6 +722,33 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
       }
     };
     
+    // Handle device orientation for tilt controls on mobile
+    const handleDeviceOrientation = (e: DeviceOrientationEvent) => {
+      if (isMobile && e.gamma !== null && e.beta !== null) {
+        // Convert gamma (-90 to 90, left-right tilt) to yaw
+        const yawAngle = e.gamma * 0.002;
+        
+        // Convert beta (-180 to 180, front-back tilt) to pitch
+        const pitchAngle = e.beta * 0.002;
+        
+        // Create rotation quaternions for the ship
+        const yawQuat = new THREE.Quaternion().setFromAxisAngle(
+          new THREE.Vector3(0, 1, 0), // Y-axis in local space
+          -yawAngle
+        );
+        
+        const rightAxis = new THREE.Vector3(1, 0, 0).applyQuaternion(spaceship.quaternion);
+        const pitchQuat = new THREE.Quaternion().setFromAxisAngle(
+          rightAxis, // Local right axis for pitch
+          -pitchAngle
+        );
+        
+        // Apply rotations in local space
+        spaceship.quaternion.premultiply(yawQuat);
+        spaceship.quaternion.premultiply(pitchQuat);
+      }
+    };
+    
     // Handle mouse movement for flight controls
     
     // Handle keyboard input
@@ -1380,6 +1407,7 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
       // Mobile-specific listeners
       mountNode.addEventListener('touchstart', handleTouchStart);
       mountNode.addEventListener('touchend', handleTouchEnd);
+      window.addEventListener('deviceorientation', handleDeviceOrientation);
     }
     
     // Setup complete
@@ -1409,6 +1437,7 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
         // Remove mobile-specific listeners
         mountNode.removeEventListener('touchstart', handleTouchStart);
         mountNode.removeEventListener('touchend', handleTouchEnd);
+        window.removeEventListener('deviceorientation', handleDeviceOrientation);
       }
       
       // Clean up standard event listeners
