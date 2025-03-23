@@ -63,11 +63,18 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
   });
 
   useEffect(() => {
-    // Initialize background music settings, but don't play it yet
-    // It will be played on first user interaction (mobile tap or keyboard press)
+    // Initialize background music
     if (audioRef.current) {
       audioRef.current.volume = isMuted ? 0 : 0.3;
       audioRef.current.loop = true;
+      
+      // Autoplay for desktop, defer for mobile
+      if (!isMobile) {
+        audioRef.current.play().catch(err => {
+          console.error("Audio playback failed:", err);
+        });
+      }
+      // For mobile, audio will be played on first touch
     }
     
     // Initialize scene setup
@@ -716,7 +723,7 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
         shipControls.thrust = true;
         setThrust(true);
         
-        // Play audio on first interaction if it hasn't started yet
+        // Play audio on first mobile interaction if it hasn't started yet
         if (audioRef.current && !audioRef.current.played.length) {
           audioRef.current.play().catch(err => {
             console.error("Audio playback failed:", err);
@@ -821,8 +828,8 @@ const GameMode: React.FC<GameModeProps> = ({ onExit }) => {
         return;
       }
       
-      // Play audio on first interaction if it hasn't started yet
-      if (audioRef.current && !audioRef.current.played.length) {
+      // Play audio on first interaction if on mobile and hasn't started yet
+      if (isMobile && audioRef.current && !audioRef.current.played.length) {
         audioRef.current.play().catch(err => {
           console.error("Audio playback failed:", err);
         });
