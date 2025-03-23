@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { FaEarlybirds,
+import { FaBugSlash,
+         FaEarlybirds,
          FaHouseLaptop,
          FaPersonRunning,
          FaPlane, 
@@ -121,6 +122,22 @@ export const GAME_DEFINITIONS: GameDefinition[] = [
     color: 0x2e2e29,
     glowColor: 0xf3fdce,
     coreColor: 0x584578,
+    collisionRadius: 20
+  },
+  {
+    id: 'you-the-mantis',
+    title: 'You The Mantis',
+    description: 'Catch flies! Against the clock! And beat your mantis friends and family. Made by mira.ly (7yo) and hybridherbst',
+    url: 'https://fang-die-fliege-z23hmxbz1f9iur.needle.run/',
+    icon: React.createElement(FaBugSlash, { size: 36, className: "mb-4" }),
+    enabled: true,
+    
+    // 3D world properties
+    position: new THREE.Vector3(-20, 40, 20),
+    radius: 20,
+    color: 0x48e246,
+    glowColor: 0xf3fdce,
+    coreColor: 0xebfd5d,
     collisionRadius: 20
   },
   // Add more games here as needed
