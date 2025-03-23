@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { FaBugSlash,
+         FaCircleQuestion,
          FaEarlybirds,
          FaHouseLaptop,
          FaPersonRunning,
@@ -54,11 +55,11 @@ export const GAME_DEFINITIONS: GameDefinition[] = [
     
     // 3D world properties
     position: new THREE.Vector3(-100, -80, 200),
-    radius: 40,
+    radius: 20,
     color: 0x9F2B68,
     glowColor: 0xBF40BF,
     coreColor: 0x9F2B68,
-    collisionRadius: 40
+    collisionRadius: 20
   },
   {
     id: '1p-flappy-bird',
@@ -137,6 +138,22 @@ export const GAME_DEFINITIONS: GameDefinition[] = [
     radius: 20,
     color: 0x48e246,
     glowColor: 0xf3fdce,
+    coreColor: 0xebfd5d,
+    collisionRadius: 20
+  },
+  {
+    id: 'vibeverse',
+    title: 'Vibeverse',
+    description: 'A portal into a random vibegame from the Pieterverse of the @levelsio game jam',
+    url: 'http://portal.pieter.com?ref=https%3A%2F%2Fgame-portals.com%2Fgames%3FgameMode%3Dtrue',
+    icon: React.createElement(FaCircleQuestion, { size: 36, className: "mb-4" }),
+    enabled: true,
+    
+    // 3D world properties
+    position: new THREE.Vector3(0, -120, -40),
+    radius: 20,
+    color: 0xcc0000,
+    glowColor: 0xf218ea,
     coreColor: 0xebfd5d,
     collisionRadius: 20
   },
