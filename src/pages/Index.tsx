@@ -135,14 +135,14 @@ const Index: React.FC = () => {
                 >
                   <Link to="/games">
                     <button className="text-2xl font-bold tracking-wider text-space-light hover:text-space-light/80 transition-all duration-300">
-                      > ALL GAMES
+                      &gt; ALL GAMES
                     </button>
                   </Link>
                   <button 
                     onClick={handleRandomGame}
                     className="text-2xl font-bold tracking-wider text-space-light hover:text-space-light/80 transition-all duration-300"
                   >
-                    > I'M FEELING LUCKY
+                    &gt; I'M FEELING LUCKY
                   </button>
                 </motion.div>
               )}
