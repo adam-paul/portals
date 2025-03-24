@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { FaBugSlash,
+         FaChurch,
          FaCircleQuestion,
          FaEarlybirds,
          FaHouseLaptop,
@@ -155,6 +156,22 @@ export const GAME_DEFINITIONS: GameDefinition[] = [
     color: 0xcc0000,
     glowColor: 0xf218ea,
     coreColor: 0xebfd5d,
+    collisionRadius: 20
+  },
+  {
+    id: 'afterlife-empires',
+    title: 'Afterlife Empires',
+    description: 'Another three.js banger from the GOAT, enter the afterlife as one of four religious empires and mog the most converts',
+    url: 'https://three-scene-production.up.railway.app/',
+    icon: React.createElement(FaChurch, { size: 36, className: "mb-4" }),
+    enabled: true,
+    
+    // 3D world properties
+    position: new THREE.Vector3(-80, 40, 70),
+    radius: 20,
+    color: 0xdf16ce,
+    glowColor: 0x7150ce,
+    coreColor: 0xf90606,
     collisionRadius: 20
   },
   // Add more games here as needed
