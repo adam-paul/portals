@@ -3,11 +3,13 @@ import { FaBugSlash,
          FaChurch,
          FaCircleQuestion,
          FaEarlybirds,
+         FaGhost,
          FaHouseLaptop,
          FaPersonRunning,
          FaPlane, 
          FaRobot, 
          FaSpaghettiMonsterFlying } from "react-icons/fa6";
+import { GiAcidBlob } from "react-icons/gi";
 import React from 'react';
 
 // This is our single source of truth for all games in the application
@@ -171,6 +173,38 @@ export const GAME_DEFINITIONS: GameDefinition[] = [
     radius: 20,
     color: 0xdf16ce,
     glowColor: 0x7150ce,
+    coreColor: 0xf90606,
+    collisionRadius: 20
+  },
+  {
+    id: 'tensu-io',
+    title: 'tensu.io',
+    description: '3D Multiplayer Magical Slime Combat Game',
+    url: 'https://tensu.io',
+    icon: React.createElement(GiAcidBlob, { size: 36, className: "mb-4" }),
+    enabled: true,
+    
+    // 3D world properties
+    position: new THREE.Vector3(-90, -40, 90),
+    radius: 20,
+    color: 0x8be496,
+    glowColor: 0x87d0e8,
+    coreColor: 0xf90606,
+    collisionRadius: 20
+  },
+  {
+    id: 'teleprancer',
+    title: 'Teleprancer',
+    description: 'A 2D Platformer',
+    url: 'https://nathanjhall.itch.io/teleprancer',
+    icon: React.createElement(FaGhost, { size: 36, className: "mb-4" }),
+    enabled: true,
+    
+    // 3D world properties
+    position: new THREE.Vector3(0, 0, 80),
+    radius: 20,
+    color: 0x1100ff,
+    glowColor: 0x94a9ff,
     coreColor: 0xf90606,
     collisionRadius: 20
   },
