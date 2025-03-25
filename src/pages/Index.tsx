@@ -4,12 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import StarField from '@/components/StarField';
 import PortalAnimation from '@/components/PortalAnimation';
 import Navbar from '@/components/Navbar';
+import CreatePortalModal from '@/components/CreatePortalModal';
 import { getEnabledGames } from '@/data/games';
 
 const Index: React.FC = () => {
   const navigate = useNavigate();
   const [isLoaded, setIsLoaded] = useState(false);
   const [isCollapsing, setIsCollapsing] = useState(false);
+  const createPortalRef = React.useRef<HTMLButtonElement>(null);
   
   // Listen for popstate events (browser back/forward buttons) and visibility changes
   useEffect(() => {
@@ -144,6 +146,15 @@ const Index: React.FC = () => {
                   >
                     ○ I'M FEELING LUCKY
                   </button>
+                  <button 
+                    onClick={() => createPortalRef.current?.click()}
+                    className="text-2xl font-bold tracking-wider text-space-light hover:text-space-light/80 transition-all duration-300"
+                  >
+                    ○ CREATE A PORTAL TO YOUR WORLD
+                  </button>
+                  <div className="hidden">
+                    <CreatePortalModal triggerRef={createPortalRef} />
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>

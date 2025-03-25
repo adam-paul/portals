@@ -19,10 +19,15 @@ export interface FormData {
   radius: number;
 }
 
-const CreatePortalModal: React.FC = () => {
+interface CreatePortalModalProps {
+  triggerRef?: React.RefObject<HTMLButtonElement>;
+}
+
+const CreatePortalModal: React.FC<CreatePortalModalProps> = ({ triggerRef }) => {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
+  const defaultTriggerRef = React.useRef<HTMLButtonElement>(null);
   const [formData, setFormData] = useState<FormData>({
     title: '', description: '', url: '', color: '#ffffaa', glowColor: '#ffffcc', coreColor: '#ffffff',
     position: { x: 0, y: 0, z: 0 }, radius: 20,
@@ -84,7 +89,11 @@ const CreatePortalModal: React.FC = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button className="text-white/70 hover:text-white text-lg font-bold tracking-wider transition-all duration-300" aria-label="Create a portal to your world">
+        <button 
+          ref={triggerRef || defaultTriggerRef}
+          className="text-white/70 hover:text-white text-lg font-bold tracking-wider transition-all duration-300" 
+          aria-label="Create a portal to your world"
+        >
           Create a Portal to Your World
         </button>
       </DialogTrigger>
